@@ -469,10 +469,8 @@ function ProductBlueprint({ agentData, setAgentData, data, setData }) {
             ))}
           </div>
         </div>
-        {/* Learning journey steps - collapsible */}
+        {/* Learning journey steps - always visible */}
         {(agent.steps || []).length > 0 && (() => {
-          const isOpen = (agentData[agent.id]?.stepsOpen);
-          const toggleOpen = () => setAgentData((p) => ({ ...p, [agent.id]: { ...p[agent.id], stepsOpen: !isOpen } }));
           const getStepConf = (stepId) => (agentData[agent.id]?.stepConf || {})[stepId] || "no_idea";
           const cycleStepConf = (stepId) => {
             const cur = getStepConf(stepId);
@@ -483,21 +481,19 @@ function ProductBlueprint({ agentData, setAgentData, data, setData }) {
           const doneSteps = (agent.steps || []).filter((s) => getStepConf(s.id) === "confident").length;
           return (
             <div style={{ borderBottom: `1px solid ${C.bdr}` }}>
-              <div onClick={toggleOpen} style={{ padding: "8px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, background: isOpen ? C.bgS : "transparent" }}>
-                <span style={{ fontSize: 10, color: C.txT, transform: isOpen ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.15s" }}>&#9654;</span>
+              <div style={{ padding: "8px 16px", display: "flex", alignItems: "center", gap: 8, background: C.bgS }}>
                 <span style={{ fontSize: 11, fontWeight: 600, color: C.txT, textTransform: "uppercase", letterSpacing: "0.04em" }}>Learning journey</span>
-                <span style={{ fontSize: 11, color: C.txT, marginLeft: "auto" }}>{doneSteps}/{agent.steps.length}</span>
+                <span style={{ fontSize: 11, color: doneSteps === agent.steps.length ? C.green : C.txT, marginLeft: "auto" }}>{doneSteps}/{agent.steps.length}</span>
               </div>
-              {isOpen && (
-                <div style={{ padding: "0 16px 8px" }}>
-                  {agent.steps.map((step) => (
-                    <div key={step.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: `1px solid ${C.bdr}` }}>
-                      <span style={{ fontSize: 13, fontFamily: F.sans, color: C.tx, flex: 1, lineHeight: 1.45 }}>{step.text}</span>
-                      <ConfChip level={getStepConf(step.id)} onClick={() => cycleStepConf(step.id)} />
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div style={{ padding: "0 16px 8px" }}>
+                {agent.steps.map((step, stepIdx) => (
+                  <div key={step.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: `1px solid ${C.bdr}` }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: C.txT, minWidth: 18, textAlign: "right", fontFamily: F.mono, flexShrink: 0 }}>{stepIdx + 1}.</span>
+                    <span style={{ fontSize: 13, fontFamily: F.sans, color: C.tx, flex: 1, lineHeight: 1.45 }}>{step.text}</span>
+                    <ConfChip level={getStepConf(step.id)} onClick={() => cycleStepConf(step.id)} />
+                  </div>
+                ))}
+              </div>
             </div>
           );
         })()}
