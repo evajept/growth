@@ -1,20 +1,26 @@
 import React, { useState, useEffect, useRef } from "react";
 
-// ── Storage: same pattern as original but using artifact persistent storage ──
+// ── Storage: using artifact persistent storage with debug logging ──
 async function osLoad(key, fallback) {
   try {
     const result = await window.storage.get(key);
-    if (result && result.value != null) return JSON.parse(result.value);
+    console.log("[LOAD]", key, result ? "found" : "not found");
+    if (result && result.value != null) {
+      const parsed = JSON.parse(result.value);
+      return parsed;
+    }
     return fallback;
   } catch (e) {
+    console.log("[LOAD ERR]", key, e.message);
     return fallback;
   }
 }
 async function osSave(key, value) {
   try {
-    await window.storage.set(key, JSON.stringify(value));
+    const result = await window.storage.set(key, JSON.stringify(value));
+    console.log("[SAVE]", key, result ? "ok" : "failed");
   } catch (e) {
-    console.error("Save failed:", e);
+    console.error("[SAVE ERR]", key, e.message);
   }
 }
 
@@ -288,9 +294,13 @@ export default function App() {
     })();
   }, []);
 
-  // Save - SAME pattern as original
+  // Save - SAME pattern as original + debug
   useEffect(() => {
-    if (!loaded || !saveGuard.current) return;
+    if (!loaded || !saveGuard.current) {
+      console.log("[SAVE EFFECT] skipped - loaded:", loaded, "guard:", saveGuard.current);
+      return;
+    }
+    console.log("[SAVE EFFECT] running saves...");
     (async () => {
       try { if (startDate) await osSave("gp-start", startDate); } catch (e) {}
       try { if (Object.keys(data).length > 0) await osSave("gp-data", data); } catch (e) {}
@@ -298,6 +308,7 @@ export default function App() {
       try { if (notes.length > 0) await osSave("gp-notes", notes); } catch (e) {}
       try { if (Object.keys(ccaData).length > 0) await osSave("gp-cca", ccaData); } catch (e) {}
       try { if (Object.keys(howtoData).length > 0) await osSave("gp-howto", howtoData); } catch (e) {}
+      console.log("[SAVE EFFECT] done");
     })();
   }, [startDate, data, agentData, notes, ccaData, howtoData, loaded]);
 
